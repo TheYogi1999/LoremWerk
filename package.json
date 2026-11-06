@@ -1,13 +1,13 @@
 {
   "name": "loremwerk",
-  "version": "0.2.0",
-  "description": "Local DE/EN technical synonym editor, GitHub Pages ready",
+  "version": "0.3.0",
+  "description": "Local German/English technical synonym editor, GitHub Pages ready",
   "private": true,
   "scripts": {
     "start": "node server.cjs",
     "build": "node tools/build-standalone.cjs",
     "test": "node --test tests/*.test.cjs",
-    "check": "node --check src/main.js && node --check src/engine.js && node --check src/terms.js && npm test"
+    "check": "node --check src/main.js && node --check src/engine.js && node --check src/terms.js && node --check src/extra-terms.js && node --check src/context.js && npm test"
   },
   "engines": {
     "node": ">=18"

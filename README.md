@@ -1,57 +1,49 @@
 # LoremWerk
 
-**v0.2.0** · Deutsch / English · Technical writing · Browser-only processing · Offline
+**Version 0.3.0** · Deutsch / English · Technical Writing · Browser-first · Offline
 
-LoremWerk ist ein technischer Schreibeditor für Deutsch und Englisch: **Wort anklicken, passende Synonyme vergleichen und nur das gewählte Wort ersetzen.** Ausdrücke können ebenfalls markiert werden.
+LoremWerk is a local, privacy-conscious technical writing editor. **Click a word or select a technical phrase, pick a meaning-labeled synonym, and replace only that selection.** No external translation API, AI provider, tracker, login or backend. It is not yet a neural full-document translator.
 
-## Online & offline nutzen
+## Use it
 
-- GitHub Pages: Nach einmaliger Aktivierung unter [Settings → Pages](https://github.com/TheYogi1999/LoremWerk/settings/pages) kann die Anwendung unter **https://theyogi1999.github.io/LoremWerk/** aufgerufen werden.
-- Ohne Internet: Repository herunterladen und `index.html` im Browser öffnen.
-- Lokal als Server (Node.js 18+): `npm start` und http://127.0.0.1:4173 öffnen.
-- Einzeldatei offline: `npm run build` erzeugt `dist/LoremWerk-v0.2.0.html`.
+- **GitHub Pages:** When enabled at [Repository Settings → Pages](https://github.com/TheYogi1999/LoremWerk/settings/pages), open **https://theyogi1999.github.io/LoremWerk/**.
+- **Offline:** Download the repository and open `index.html` directly in a modern browser. For a single-file offline build run `npm run build` and open `dist/LoremWerk-v0.3.0.html`.
+- **Local server:** Node.js 18+: `npm start`, then `http://127.0.0.1:4173` (localhost only).
 
-## Funktionen
+## Features
 
-- DE/EN-Synonyme mit Hinweisen zu Bedeutung und technischem Kontext (Maschinenbau, Automation, Elektrotechnik, IT).
-- Wort anklicken oder längere Begriffe markieren; Vorschlag auswählen und den Text ersetzen.
-- Letzte Ersetzungen rückgängig machen.
-- Fachwortübersetzungen einzelner Begriffe kopieren; **keine automatische Volltextübersetzung**.
-- Eigenes Fachwörterbuch ergänzen und JSON importieren/exportieren.
-- TXT öffnen/speichern, Text kopieren, lokale automatische Speicherung.
-- Mobil- und Desktopansicht, kein externes API oder Tracking.
-- Sichtbare Version in der App, Changelog, Git-Historie und automatische Tests.
+- 456 bundled DE/EN technical and writing entries (91 original + 365 new) with meaning notes spanning mechanical engineering, electricity, automation, IT, safety and documentation.
+- Select text or tap/click inside a word. For recognized German nouns, a change of grammatical gender can also propose article, simple adjective endings and the nearest unambiguous pronoun in the following sentence. Every related edit is previewed and requires confirmation. Undo is supported.
+- Full-document scan warns about additional possible references without rewriting them automatically.
+- Copy terminology translations for individual entries and phrases (**no automatic complete text translation**).
+- Local glossary with add/import/export in JSON; TXT import/export and browser autosave.
+- Responsive desktop/mobile UI, keyboard accessible buttons, no runtime package dependencies.
+- PWA shell cached after first online visit on HTTPS; installation may depend on browser.
+- Visible `v0.3.0` in header/footer; changelog and Git history.
 
-## GitHub Pages aktivieren
+## GitHub Pages activation
 
-Die Datei `.github/workflows/pages.yml` veröffentlicht die statische Website bei jedem Push auf `main`.
+The repository includes `.github/workflows/pages.yml`, which publishes the root static site on every push to `main`. To activate it **once**, open [Settings → Pages](https://github.com/TheYogi1999/LoremWerk/settings/pages) and set **Build and deployment → Source → GitHub Actions**. GitHub Actions should run and the site appear at https://theyogi1999.github.io/LoremWerk/. The workflow cannot bypass this initial repo setting; do not treat the URL as live until Pages reports a successful deployment.
 
-1. Öffne **https://github.com/TheYogi1999/LoremWerk/settings/pages**.
-2. Wähle bei **Build and deployment → Source** die Option **GitHub Actions**.
-3. Kontrolliere [Actions](https://github.com/TheYogi1999/LoremWerk/actions) und starte ggf. *Publish LoremWerk to GitHub Pages* mit **Run workflow**.
-4. Nach erfolgreichem Deployment: https://theyogi1999.github.io/LoremWerk/.
+## Development & versioning
 
-Die einmalige Pages-Einstellung kann über die verbundene GitHub-Funktion nicht automatisch gesetzt werden. Die URL ist erst nach einem erfolgreichen Deployment online.
-
-## Entwicklung / Testen
-
-```bash
-npm run check
+```sh
 npm test
+npm run check
 npm run build
 npm start
 ```
 
-Node 18+ benötigt, **keine npm-Paketinstallation**. Quellcode liegt in `src/`, der Begriffskatalog in `src/terms.js`, Tests in `tests/`. `index.html` ist der GitHub-Pages-Einstieg; der Service Worker ermöglicht Offline-Caching nach dem ersten Besuch.
+We use SemVer (`MAJOR.MINOR.PATCH`) with `VERSION`, `package.json`, HTML `meta[name=app-version]`, PWA cache name, `CHANGELOG.md` and release branches. A release should update these together; version is displayed in the editor and its version dialog.
 
-## Versionierung
+Project structure: `index.html`, `styles.css`, `src/main.js` (UI), `src/engine.js` (text selection/replacements), `src/terms.js` and `src/extra-terms.js` (DE/EN vocabulary), `src/context.js` (conservative grammatical previews), `service-worker.js` (offline shell), `tests/` (Node native tests), `.github/workflows/` (CI, Pages), `tools/build-standalone.cjs` (one-file offline build).
 
-[CHANGELOG.md](CHANGELOG.md) enthält alle Änderungen. Wir verwenden [SemVer](https://semver.org/). Versionsnummern stehen in `VERSION`, `package.json`, `index.html` und im Cache-Namen des Service Workers sowie sichtbar im Versionsdialog.
+## Privacy and limitations
 
-## Datenschutz / Einschränkungen
+Document text and glossary are stored in browser `localStorage`; neither is sent to GitHub Pages by the application. When you **visit the hosted site**, GitHub serves the static program files, which requires an internet connection for the first visit; cached app shell can later work offline. Private browsing, browser storage clearing, or different devices will not retain saved text; export your glossary as a backup.
 
-Beim Aufrufen von GitHub Pages lädt dein Browser Programmdateien von GitHub. **Eingegebene Texte, eigene Wörterbucheinträge und Synonymersetzungen verarbeitet die App ausschließlich im Browser**, ohne sie an einen Server zu übermitteln. Die Daten bleiben im jeweiligen Browser im `localStorage`; Private Browsing oder gelöschte Websitedaten können sie entfernen. Eigene Begriffe kannst du als JSON sichern.
+Synonyms are curated and not always equivalent in specialist contexts. **Grammar is rule-based and incomplete:** a safe correction can require reviewing surrounding sentences, sentence structure and co-reference; feminine “sie” and distant pronouns are not silently reassigned. Longer document-wide reference chains are scanned for warnings, not automatically rewritten. Never use changes without technical review. **No neural full-text translation or complete AI grammar correction.**
 
-Synonyme sind kuratierte Vorschläge und nicht in jedem technischen Kontext gleichbedeutend. Noch **keine neuralen Volltextübersetzungen, keine automatische Grammatik-KI**.
+## License
 
-MIT-Lizenz, siehe [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).

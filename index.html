@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0c1222">
   <meta name="description" content="Lokaler Editor für technische Texte auf Deutsch und Englisch, mit anklickbaren Synonymen und Fachübersetzungen.">
-  <meta name="app-version" content="0.2.0">
+  <meta name="app-version" content="0.3.0">
   <title>LoremWerk — Technisch präzise formulieren</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -20,7 +20,7 @@
       </a>
       <div class="topbar-right">
         <span class="offline-pill" title="Keine Cloud, kein Tracking und keine externen Datenquellen"><span class="offline-dot"></span> Text bleibt lokal</span>
-        <button class="version-pill" id="version-button" type="button" title="Versionshistorie anzeigen">v<span data-version>0.2.0</span> <span aria-hidden="true">↗</span></button>
+        <button class="version-pill" id="version-button" type="button" title="Versionshistorie anzeigen">v<span data-version>0.3.0</span> <span aria-hidden="true">↗</span></button>
       </div>
     </header>
 
@@ -54,7 +54,7 @@
             <textarea id="editor" autocapitalize="sentences" autocomplete="off" autocorrect="on" spellcheck="true" placeholder="Schreibe oder füge hier deinen technischen Text ein. Tippe danach auf ein Wort, um Synonyme zu entdecken …"></textarea>
             <div class="editor-bottom">
               <span id="word-count">0 Wörter · 0 Zeichen</span>
-              <span class="editor-hint">✳ Wort anklicken oder Ausdruck markieren</span>
+              <span class="editor-hint">✳ Wort anklicken · Grammatikänderungen vorher prüfen</span>
             </div>
             <div class="editor-footer">
               <label class="file-action" for="import-text">↥ &nbsp; TXT öffnen</label>
@@ -69,13 +69,13 @@
             <div id="suggestions-content" class="suggestions-content">
               <div class="empty-suggestions"><div class="empty-icon">✦</div><h3>Ein Wort genügt.</h3><p>Klicke oder tippe im Texteditor auf ein Wort, um passende Alternativen zu entdecken.</p><div class="tip-chip">↖ Hier starten</div></div>
             </div>
-            <div class="suggestions-footnote">ⓘ Synonyme können die technische Bedeutung verändern. Bitte im Kontext prüfen.</div>
+            <div class="suggestions-footnote">ⓘ Vorschläge werden im Satz und Folgesatz geprüft; längere Pronomenbezüge bleiben möglicherweise unklar. Kontextänderungen werden vor dem Ersetzen angezeigt.</div>
           </aside>
         </div>
       </section>
 
       <section class="reference-section" aria-labelledby="reference-title">
-        <div class="reference-heading"><div><div class="eyebrow small-eyebrow">YOUR TERMINOLOGY</div><h2 id="reference-title">Fachwörterbuch <span>DE / EN</span></h2><p>Fachbegriffe nachschlagen und eigene Synonyme ergänzen. Alles bleibt auf diesem Gerät.</p></div><button type="button" class="primary-button" id="add-term">＋ Eigenen Begriff hinzufügen</button></div>
+        <div class="reference-heading"><div><div class="eyebrow small-eyebrow">YOUR TERMINOLOGY</div><h2 id="reference-title">Fachwörterbuch <span>DE / EN</span></h2><p>Erweiterter, kuratierter Fachwortschatz mit DE/EN-Synonymen. Füge eigene Begriffe hinzu – alles bleibt auf diesem Gerät.</p></div><button type="button" class="primary-button" id="add-term">＋ Eigenen Begriff hinzufügen</button></div>
         <div class="search-field"><span aria-hidden="true">⌕</span><label for="term-search" class="sr-only">Fachbegriffe durchsuchen</label><input id="term-search" placeholder="Begriff, Alternative oder Übersetzung suchen …" type="search"></div>
         <div id="term-results" class="term-grid" aria-live="polite"></div>
         <div class="term-actions"><span id="term-result-count"></span><div><button type="button" class="subtle-button" id="export-glossary">Eigenes Wörterbuch exportieren</button><label class="subtle-button" for="import-glossary">Wörterbuch importieren</label><input type="file" id="import-glossary" accept="application/json,.json" hidden></div></div>
@@ -83,15 +83,19 @@
       <section class="privacy-note"><span class="privacy-icon">♧</span><div><strong>Deine Daten gehören dir.</strong><p>Keine Anmeldung, keine Cookies von Drittanbietern, kein KI-Server. Der Text und eigene Fachbegriffe werden nur lokal im Browser gespeichert.</p></div></section>
     </main>
 
-    <footer class="site-footer"><span>LoremWerk <span class="footer-dot">·</span> Version <span data-version>0.2.0</span></span><span>Offline by design <span class="footer-dot">·</span> Open Source MVP</span></footer>
+    <footer class="site-footer"><span>LoremWerk <span class="footer-dot">·</span> Version <span data-version>0.3.0</span></span><span>Offline by design <span class="footer-dot">·</span> Open Source MVP</span></footer>
   </div>
 
   <dialog id="term-dialog" class="dialog"><form method="dialog" id="term-form" class="dialog-body"><div class="dialog-header"><div><span class="eyebrow small-eyebrow">CUSTOM TERMINOLOGY</span><h2>Eigenen Begriff anlegen</h2></div><button value="cancel" type="button" class="dialog-close" data-close="term-dialog" aria-label="Schließen">×</button></div><label>Sprache<select id="custom-language" required><option value="de">Deutsch</option><option value="en">Englisch</option></select></label><label>Begriff<input id="custom-term" maxlength="100" placeholder="z. B. Stellglied" required></label><label>Synonyme <small>(durch Komma getrennt)</small><input id="custom-synonyms" maxlength="500" placeholder="z. B. Aktor, Betätigungselement" required></label><label>Übersetzung <small>(optional)</small><input id="custom-translation" maxlength="200" placeholder="z. B. actuator"></label><label>Hinweis zum Kontext <small>(optional)</small><input id="custom-note" maxlength="200" placeholder="z. B. Begriff nur für Regelungstechnik"></label><div class="dialog-actions"><button type="button" class="subtle-button" data-close="term-dialog">Abbrechen</button><button type="submit" class="primary-button">Begriff speichern</button></div></form></dialog>
 
-  <dialog id="version-dialog" class="dialog"><div class="dialog-body"><div class="dialog-header"><div><span class="eyebrow small-eyebrow">RELEASE HISTORY</span><h2>Versionsverlauf</h2></div><button type="button" class="dialog-close" data-close="version-dialog" aria-label="Schließen">×</button></div><div class="release-entry"><span class="release-version">v0.2.0</span><span class="release-date">06. November 2026</span><h3>Neuer Name & GitHub-Pages-Edition</h3><p>Lokaler Editor, anklickbare deutsche und englische Synonyme, Fachübersetzungen, eigene Begriffsdatenbank, Text-Import/Export und Offline-Unterstützung.</p><p>Unter dem Namen LoremWerk für GitHub Pages vorbereitet, mit automatischer Veröffentlichung und sichtbarem Versionsverlauf.</p><p class="release-note">Maschinelle Volltextübersetzung und KI-basierte Satzkorrektur sind noch nicht Teil dieser Version.</p></div><hr class="release-separator"><div class="release-entry"><span class="release-version">v0.1.0</span> · 06. November 2026<p>Erste lokale Version mit Synonym-Auswahl, Fachübersetzungen, eigenem Wörterbuch und Offline-Modus.</p></div><div class="dialog-actions"><button type="button" class="primary-button" data-close="version-dialog">Schließen</button></div></div></dialog>
+  <dialog id="context-dialog" class="dialog" aria-labelledby="context-title"><div class="dialog-body"><div class="dialog-header"><div><span class="eyebrow small-eyebrow">GRAMMATIK & KONTEXT</span><h2 id="context-title">Ersetzung prüfen</h2></div><button type="button" class="dialog-close" data-close="context-dialog" aria-label="Schließen">×</button></div><p id="context-summary" class="context-summary"></p><div class="context-preview"><div><strong>Vorher</strong><p id="context-before"></p></div><div><strong>Nachher</strong><p id="context-after"></p></div></div><ul id="context-details" class="context-details"></ul><p class="context-disclaimer">LoremWerk verwendet lokale, begrenzte Grammatikregeln. Weitere Pronomen, Satzbezüge und technische Bedeutungen können weiterhin manuelle Prüfung erfordern.</p><div class="dialog-actions"><button type="button" class="subtle-button" data-close="context-dialog">Abbrechen</button><button type="button" class="primary-button" id="context-accept">Geprüfte Änderung übernehmen</button></div></div></dialog>
+
+  <dialog id="version-dialog" class="dialog"><div class="dialog-body"><div class="dialog-header"><div><span class="eyebrow small-eyebrow">RELEASE HISTORY</span><h2>Versionsverlauf</h2></div><button type="button" class="dialog-close" data-close="version-dialog" aria-label="Schließen">×</button></div><div class="release-entry"><span class="release-version">v0.3.0</span><span class="release-date">06. November 2026</span><h3>Neuer Name & GitHub-Pages-Edition</h3><p>Lokaler Editor, anklickbare deutsche und englische Synonyme, Fachübersetzungen, eigene Begriffsdatenbank, Text-Import/Export und Offline-Unterstützung.</p><p>Unter dem Namen LoremWerk auf GitHub Pages vorbereitet, mit automatischer Veröffentlichung, Quellcode und sichtbarem Versionsverlauf.</p><p class="release-note">Maschinelle Volltextübersetzung und KI-basierte Satzkorrektur sind noch nicht Teil dieser Version.</p><hr class="release-separator"><span class="release-version">v0.1.0</span> · 06. November 2026<p>Erste lokale Version als Technical Writer Local: Synonymauswahl, Fachübersetzungen und eigenes Wörterbuch.</p></div><div class="dialog-actions"><button type="button" class="primary-button" data-close="version-dialog">Schließen</button></div></div></dialog>
   <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
   <script src="./src/terms.js" defer></script>
   <script src="./src/engine.js" defer></script>
+  <script src="./src/extra-terms.js" defer></script>
+  <script src="./src/context.js" defer></script>
   <script src="./src/main.js" defer></script>
 </body>
 </html>

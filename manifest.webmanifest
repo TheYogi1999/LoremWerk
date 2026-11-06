@@ -1,7 +1,7 @@
 {
   "name": "LoremWerk — Technical Writing",
   "short_name": "LoremWerk",
-  "description": "Technische DE/EN-Synonyme, lokal im Browser",
+  "description": "Technischer DE/EN Schreibassistent mit Synonymen, lokal im Browser",
   "lang": "de",
   "start_url": "./",
   "scope": "./",

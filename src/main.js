@@ -1,8 +1,9 @@
-/* LoremWerk v0.2.0 — all processing stays in this browser. */
+/* LoremWerk v0.3.0 — all processing stays in this browser. */
 (() => {
   'use strict';
   const Engine = window.TWEngine;
-  const Terms = window.TWTerms;
+  const Terms = [...window.TWTerms, ...(window.LWExtraTerms || [])];
+  const Context = window.LWContext;
   const VERSION = document.querySelector('meta[name="app-version"]').content;
   const STORAGE_KEY = 'loremwerk:workspace:v1';
   const GLOSSARY_KEY = 'loremwerk:glossary:v1';
@@ -15,6 +16,7 @@
   let language = 'de';
   let custom = [];
   let selected = null;
+  let pendingPlan = null;
   let undoStack = [];
   let toastTimer;
 
@@ -70,14 +72,17 @@
       divider.append(element('span', '', 'ALTERNATIVE FORMULIERUNGEN'), element('span', '', `${entry.alternatives.length} Treffer`));
       suggestionContainer.append(divider);
       for (const option of entry.alternatives) {
+        const plan = canReplace ? Context.planReplacement(editor.value, target, option, language) : null;
         const button = element('button', 'suggestion');
         button.type = 'button';
         const content = element('span', 'suggestion-main');
         content.append(element('span', 'suggestion-name', option.text));
         if (option.note) content.append(element('span', 'suggestion-note', option.note));
+        if (plan?.changes?.length > 1) content.append(element('span', 'context-adjusted', `✓ ${plan.changes.length-1} Grammatik-Anpassung(en) möglich`));
+        if (plan?.warnings?.length) content.append(element('span', 'context-warning', '⚠ Mehrdeutige Bezüge prüfen'));
         button.append(content, element('span', 'suggestion-plus', canReplace ? '＋' : '⧉'));
         button.title = canReplace ? `„${target.text}“ durch „${option.text}“ ersetzen` : `„${option.text}“ kopieren`;
-        button.addEventListener('click', () => canReplace ? replaceSelected(target, option.text) : copyText(option.text));
+        button.addEventListener('click', () => canReplace ? replaceSelected(target, option) : copyText(option.text));
         suggestionContainer.append(button);
       }
       if (entry.translations && entry.translations.length) {
@@ -109,19 +114,49 @@
     editor.setSelectionRange(target.start, target.end);
   }
   function replaceSelected(target, alternative) {
-    // The text may have been edited since a suggestion was displayed.
-    const result = Engine.replaceTarget(editor.value, target, alternative, language);
-    if (!result) return notify('Text wurde verändert. Bitte das Wort erneut auswählen.');
+    const plan = Context.planReplacement(editor.value, target, alternative, language);
+    if (!plan) return notify('Text wurde verändert. Bitte das Wort erneut auswählen.');
+    if (plan.requiresReview) {
+      pendingPlan = { plan, target, original: editor.value };
+      const changed = plan.changes.filter((c) => c.reason !== 'Ausgewähltes Synonym');
+      byId('context-summary').textContent = changed.length ? `${changed.length} zusätzliche Wortform(en) werden vorgeschlagen.` : 'Der Satz enthält einen mehrdeutigen Bezug.';
+      byId('context-before').textContent = snippetAround(editor.value, target.start, target.end);
+      byId('context-after').textContent = snippetAround(plan.text, plan.start, plan.end);
+      const details = byId('context-details');
+      details.replaceChildren();
+      for (const c of changed) details.append(element('li', 'context-ok', `${c.before} → ${c.after} · ${c.reason}`));
+      for (const warning of plan.warnings) details.append(element('li', 'context-caution', `⚠ ${warning}`));
+      byId('context-dialog').showModal();
+      return;
+    }
+    commitPlan(plan, target);
+  }
+  function snippetAround(text, start, end) {
+    const from = Math.max(0, text.lastIndexOf('\n', start - 1) + 1);
+    const nextNewline = text.indexOf('\n', end);
+    const to = Math.min(text.length, nextNewline >= 0 ? nextNewline : text.length);
+    const snippet = text.slice(from, to);
+    return snippet.length <= 600 ? snippet : text.slice(Math.max(from, start - 140), Math.min(to, end + 300));
+  }
+  function commitPlan(plan, target) {
     undoStack.push({ text: editor.value, selectionStart: target.start, selectionEnd: target.end });
     if (undoStack.length > 30) undoStack.shift();
-    editor.value = result.text;
+    editor.value = plan.text;
     saveWorkspace();
     updateCounters();
-    // Highlight the newly inserted word; further selection works immediately.
     editor.focus();
-    editor.setSelectionRange(result.start, result.end);
-    showSuggestions(Engine.findTarget(editor.value, result.start, result.end, currentIndex()));
-    notify(`„${result.replacement}“ eingesetzt`);
+    editor.setSelectionRange(plan.start, plan.end);
+    showSuggestions(Engine.findTarget(editor.value, plan.start, plan.end, currentIndex()));
+    const related = plan.changes.length - 1;
+    notify(related ? `„${plan.replacement}“ und ${related} Grammatik-Anpassung(en) eingesetzt` : `„${plan.replacement}“ eingesetzt`);
+  }
+  function acceptContextChange() {
+    if (!pendingPlan) return;
+    const {plan, target, original} = pendingPlan;
+    pendingPlan = null;
+    byId('context-dialog').close();
+    if (editor.value !== original) return notify('Text wurde verändert. Bitte erneut auswählen.');
+    commitPlan(plan, target);
   }
   function undoReplacement() {
     const last = undoStack.pop();
@@ -265,7 +300,7 @@
     });
     document.querySelectorAll('[data-language]').forEach((btn) => btn.addEventListener('click', () => setLanguage(btn.dataset.language)));
     byId('copy-text').addEventListener('click', () => copyText(editor.value));
-    byId('export-text').addEventListener('click', () => download(`technical-writer-${language}.txt`, editor.value));
+    byId('export-text').addEventListener('click', () => download(`LoremWerk-${language}.txt`, editor.value));
     byId('import-text').addEventListener('change', async (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -278,9 +313,11 @@
     byId('term-search').addEventListener('input', renderTermCards);
     byId('add-term').addEventListener('click', () => openTermDialog());
     byId('term-form').addEventListener('submit', addCustomTerm);
-    byId('export-glossary').addEventListener('click', () => download('technical-writer-glossar.json', JSON.stringify({ format: 'loremwerk-glossary', version: 1, entries: custom }, null, 2), 'application/json;charset=utf-8'));
+    byId('export-glossary').addEventListener('click', () => download('LoremWerk-glossar.json', JSON.stringify({ format: 'loremwerk-glossary', version: 1, entries: custom }, null, 2), 'application/json;charset=utf-8'));
     byId('import-glossary').addEventListener('change', async (event) => { await importGlossary(event.target.files?.[0]); event.target.value = ''; });
     byId('version-button').addEventListener('click', () => byId('version-dialog').showModal());
+    byId('context-accept').addEventListener('click', acceptContextChange);
+    byId('context-dialog').addEventListener('close', () => { pendingPlan = null; });
     document.querySelectorAll('[data-close]').forEach((btn) => btn.addEventListener('click', () => byId(btn.dataset.close).close()));
     // Browser default Escape closes dialogs; no external keyboard dependency.
   }

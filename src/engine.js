@@ -1,4 +1,4 @@
-/* LoremWerk — pure, dependency-free language engine. */
+/* Technical Writer Local — pure, dependency-free language engine. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -13,11 +13,25 @@
   function createIndex(dictionary, custom = [], language = 'de') {
     const index = new Map();
     for (const term of dictionary.filter((item) => item.language === language)) {
-      index.set(normalize(term.term), {
-        ...term,
-        alternatives: [...term.alternatives],
-        translations: [...(term.translations || [])]
-      });
+      const key = normalize(term.term);
+      const prev = index.get(key);
+      if (!prev) {
+        index.set(key, {
+          ...term, alternatives: [...term.alternatives], translations: [...(term.translations || [])]
+        });
+      } else {
+        // Same word may occur in several technical fields. Preserve all distinct
+        // meanings and label alternatives rather than discarding earlier entries.
+        const seen = new Set(prev.alternatives.map((a) => normalize(a.text)));
+        for (const alt of term.alternatives) {
+          if (!seen.has(normalize(alt.text))) {
+            prev.alternatives.push({ ...alt, note: alt.note || term.category });
+            seen.add(normalize(alt.text));
+          }
+        }
+        prev.translations = [...new Set([...prev.translations, ...(term.translations || [])])];
+        if (prev.category !== term.category) prev.category += ` / ${term.category}`;
+      }
     }
     for (const term of custom.filter((item) => item.language === language)) {
       const key = normalize(term.term);
